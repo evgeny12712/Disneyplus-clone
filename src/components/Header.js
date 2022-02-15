@@ -1,5 +1,5 @@
 import styled from 'styled-components'
-import React from 'react'
+import React, { useEffect } from 'react'
 import logo from '../assets/imgs/logo.svg'
 import homeIcon from '../assets/imgs/home-icon.svg'
 import searchIcon from '../assets/imgs/search-icon.svg'
@@ -7,39 +7,80 @@ import watchListIcon from '../assets/imgs/watchlist-icon.svg'
 import originalsIcon from '../assets/imgs/original-icon.svg'
 import moviesIcon from '../assets/imgs/movie-icon.svg'
 import seriesIcon from '../assets/imgs/series-icon.svg'
+import { getAuth, signInWithPopup, GoogleAuthProvider } from "firebase/auth";
+import { useDispatch, useSelector } from 'react-redux'
+import { useNavigate } from 'react-router-dom'
+import { selectUserName, selectUserPhoto, selectUserEmail, setUserLoginDetails } from '../features/user/userSlice'
 export default function Header() {
+    const dispatch = useDispatch()
+    const history = useNavigate()
+    const username = useSelector(selectUserName)
+    const userPhoto = useSelector(selectUserPhoto)
+
+
+    const handleAuth = () => {
+        const provider = new GoogleAuthProvider();
+        const auth = getAuth()
+        signInWithPopup(auth, provider)
+            .then((result) => {
+                setUser(result.user)
+                const credential = GoogleAuthProvider.credentialFromResult(result);
+                // const token = credential.accessToken;
+                // const user = result.user;
+            }).catch((error) => {
+                console.log('error', error)
+            });
+    }
+
+    const setUser = (user) => {
+        dispatch(
+            setUserLoginDetails({
+                name: user.displayName,
+                email: user.email,
+                photo: user.photoURL
+            })
+        )
+    }
+
     return (
         <Nav>
             <Logo>
                 <img src={logo} alt="logo" />
             </Logo>
-            <NavMenu>
-                <a href='/home'>
-                    <img src={homeIcon} alt="home-icon" />
-                    <span>HOME</span>
-                </a>
-                <a>
-                    <img src={searchIcon} alt="search-icon" />
-                    <span>SEARCH</span>
-                </a>
-                <a>
-                    <img src={watchListIcon} alt="watchlist-icon" />
-                    <span>WATCHLIST</span>
-                </a>
-                <a>
-                    <img src={originalsIcon} alt="originals-icon" />
-                    <span>ORIGINALS</span>
-                </a>
-                <a>
-                    <img src={moviesIcon} alt="movies-icon" />
-                    <span>MOVIES</span>
-                </a>
-                <a>
-                    <img src={seriesIcon} alt="series-icon" />
-                    <span>SERIES</span>
-                </a>
-            </NavMenu>
-            <Login>Login</Login>
+            {
+                !username ?
+                    <Login onClick={handleAuth}>LOGIN</Login>
+                    :
+                    <>
+                        <NavMenu>
+                            <a href='/home'>
+                                <img src={homeIcon} alt="home-icon" />
+                                <span>HOME</span>
+                            </a>
+                            <a>
+                                <img src={searchIcon} alt="search-icon" />
+                                <span>SEARCH</span>
+                            </a>
+                            <a>
+                                <img src={watchListIcon} alt="watchlist-icon" />
+                                <span>WATCHLIST</span>
+                            </a>
+                            <a>
+                                <img src={originalsIcon} alt="originals-icon" />
+                                <span>ORIGINALS</span>
+                            </a>
+                            <a>
+                                <img src={moviesIcon} alt="movies-icon" />
+                                <span>MOVIES</span>
+                            </a>
+                            <a>
+                                <img src={seriesIcon} alt="series-icon" />
+                                <span>SERIES</span>
+                            </a>
+                        </NavMenu>
+                        <UserImg src={userPhoto} alt={username} />
+                    </>
+            }
         </Nav>
     )
 }
@@ -59,6 +100,7 @@ const Nav = styled.nav`
     letter-spacing: 16px;
     z-index: 1;
 `
+
 const Logo = styled.div`
     padding: 0;
     width: 80px;
@@ -133,3 +175,7 @@ const Login = styled.a`
         border-color: transparent;
     }
 `;
+
+const UserImg = styled.img`
+    height: 100%;
+`
