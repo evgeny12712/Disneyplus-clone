@@ -1,6 +1,6 @@
 import firebase from 'firebase/compat/app';
 import { initializeApp } from 'firebase/app'
-import { getFirestore } from "firebase/firestore"
+import { getFirestore, doc, getDoc, collection, getDocs } from "firebase/firestore"
 import { getAuth, GoogleAuthProvider } from 'firebase/auth'
 const firebaseConfig = {
     apiKey: "AIzaSyAGCWerlDdyziC80YwFPdigNjBTo1ZULSg",
@@ -14,8 +14,9 @@ const firebaseConfig = {
 
 const firebaseApp = initializeApp(firebaseConfig)
 const db = getFirestore();
+const colRef = collection(db, 'movies')
 const auth = getAuth();
 const provider = new GoogleAuthProvider();
 // const storage = firebase.storage();
-export { auth, provider }
+export { auth, provider, doc, getDoc, colRef }
 export default db

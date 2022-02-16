@@ -9,27 +9,40 @@ import moviesIcon from '../assets/imgs/movie-icon.svg'
 import seriesIcon from '../assets/imgs/series-icon.svg'
 import { getAuth, signInWithPopup, GoogleAuthProvider } from "firebase/auth";
 import { useDispatch, useSelector } from 'react-redux'
-import { useNavigate } from 'react-router-dom'
-import { selectUserName, selectUserPhoto, selectUserEmail, setUserLoginDetails } from '../features/user/userSlice'
+import { Link, useNavigate } from 'react-router-dom'
+import { selectUserName, selectUserPhoto, setUserLoginDetails, setSignOutState } from '../features/user/userSlice'
+import '../firebase'
 export default function Header() {
     const dispatch = useDispatch()
-    const history = useNavigate()
+    const navigate = useNavigate()
     const username = useSelector(selectUserName)
     const userPhoto = useSelector(selectUserPhoto)
+    const provider = new GoogleAuthProvider();
+    const auth = getAuth()
 
+    useEffect(() => {
+        auth.onAuthStateChanged(async (user) => {
+            if (user) {
+                setUser(user)
+                navigate('/home')
+            }
+        })
+    }, [username])
 
     const handleAuth = () => {
-        const provider = new GoogleAuthProvider();
-        const auth = getAuth()
-        signInWithPopup(auth, provider)
-            .then((result) => {
-                setUser(result.user)
-                const credential = GoogleAuthProvider.credentialFromResult(result);
-                // const token = credential.accessToken;
-                // const user = result.user;
-            }).catch((error) => {
-                console.log('error', error)
-            });
+        if (!username) {
+            signInWithPopup(auth, provider)
+                .then((result) => {
+                    setUser(result.user)
+                }).catch((error) => {
+                    console.log('error', error)
+                });
+        } else {
+            auth.signOut().then(() => {
+                dispatch(setSignOutState())
+                navigate('/')
+            }).catch((error) => console.log(error))
+        }
     }
 
     const setUser = (user) => {
@@ -45,7 +58,9 @@ export default function Header() {
     return (
         <Nav>
             <Logo>
-                <img src={logo} alt="logo" />
+                <Link to="/home">
+                    <img src={logo} alt="logo" />
+                </Link>
             </Logo>
             {
                 !username ?
@@ -78,7 +93,12 @@ export default function Header() {
                                 <span>SERIES</span>
                             </a>
                         </NavMenu>
-                        <UserImg src={userPhoto} alt={username} />
+                        <SignOut>
+                            <UserImg src={userPhoto} alt={username} />
+                            <DropDown>
+                                <span onClick={handleAuth}>Sign out</span>
+                            </DropDown>
+                        </SignOut>
                     </>
             }
         </Nav>
@@ -98,7 +118,7 @@ const Nav = styled.nav`
     align-items: center;
     padding: 0 36px;
     letter-spacing: 16px;
-    z-index: 1;
+    z-index: 2;
 `
 
 const Logo = styled.div`
@@ -156,9 +176,9 @@ const NavMenu = styled.div`
         }
     }
 
-    /* @media (max-width: 765px) {
+    @media (max-width: 920px) {
         display: none;
-    } */
+    }
 `;
 
 const Login = styled.a`
@@ -178,4 +198,40 @@ const Login = styled.a`
 
 const UserImg = styled.img`
     height: 100%;
+`
+
+const DropDown = styled.div`
+    position: absolute;
+    top: 50px;
+    right: 0;
+    background-color: rgb(19,19,19);
+    border: 1px solid rgba(151,151,151, 0.34);
+    padding: 10px;
+    font-size: 0.875rem;
+    letter-spacing: 3px;
+    width : 100px;
+    opacity: 0;
+`
+
+const SignOut = styled.div`
+    position: relative;
+    width: 48px;
+    height: 48px;
+    display: flex;
+    cursor: pointer;
+    align-items: center;
+    justify-content: center;
+    ${UserImg} {
+        border-radius: 50%;
+        width: 100%;
+        height: 100%;
+    }
+
+    &:hover {
+        ${DropDown} {
+            opacity: 1;
+            transition-duration: 1s;
+
+        }
+    }
 `
